@@ -70,7 +70,8 @@ void Grid::input()
 	else cout << "File phaseprop.txt is not opened!\n\n" << endl;
 
 	file.open("plast.txt");
-	if (file.is_open()) {
+	if (file.is_open())
+	{
 		file >> Plast;
 		file.close();
 	}
@@ -78,15 +79,16 @@ void Grid::input()
 
 }
 
-void Grid::add_if_not_exist_and_sort(double L) {
+void Grid::add_if_not_exist_and_sort(double L)
+{
 	if (find(z_coord.begin(), z_coord.end(), L) == z_coord.end())
 	{
 		// узла нет
 		z_coord.push_back(L);
-		sort(z_coord.begin(), z_coord.end(), greater<>());
+		sort(z_coord.begin(), z_coord.end());
 	}
 	else
-		sort(z_coord.begin(), z_coord.end(), greater<>());
+		sort(z_coord.begin(), z_coord.end());
 }
 
 
@@ -97,9 +99,8 @@ void Grid::nodes()
 	int Nz_uz = 1; // колво узлов по z
 	for (int i = 0; i < NL; i++)
 		Nz_uz += nz[i];
-
-
-	double S = z0; // начальная координата
+	
+	double S = 0; // начальная координата
 
 	r_coord.resize(nr + 1); // координаты сетки по r
 	r_coord[0] = Rw;
@@ -113,13 +114,14 @@ void Grid::nodes()
 	}
 
 	z_coord.resize(Nz_uz); // координаты сетки по z
-	z_coord[0] = z0;
 	S = z0;
+	z_coord[0] = z0;
 	int c = 1;
 	for (int i = 0; i < NL; i++)
 	{
 		double delta = H[i] / nz[i];
-		for (int j = 0; j < nz[i]; j++) {
+		for (int j = 0; j < nz[i]; j++)
+		{
 			S += delta;
 			z_coord[c] = S;
 			c++;
@@ -131,6 +133,7 @@ void Grid::nodes()
 		add_if_not_exist_and_sort(Pu[i]);
 		add_if_not_exist_and_sort(Pd[i]);
 	}
+
 	// удаляем повторы в r
 	sort(r_coord.begin(), r_coord.end());
 	r_coord.erase(unique(r_coord.begin(), r_coord.end()), r_coord.end());
@@ -181,15 +184,15 @@ void Grid::material()
 	ofstream out;
 	out.open("mat.txt");
 	int k = 0;
-	double boarder = -H[0];
+	double boarder = H[0];
 	for (int i = 0; i < z_coord.size() - 1; i++)
 	{
-		if (z_coord[i] <= boarder) // если граница слоя пройдена, переходим к следующему слою
+		if (z_coord[i] >= boarder) // если граница слоя пройдена, переходим к следующему слою
 		{
-			boarder -= H[k];
+			boarder += H[k];
 			k++;
 		}
-		for (int j = 0; j < r_coord.size()-1; j++)
+		for (int j = 0; j < r_coord.size() - 1; j++)
 			out << K[k] << ' ' << Phi[k] << ' ' << S2[k] << endl;
 	}
 	out.close();
@@ -214,10 +217,10 @@ void Grid::gr_bc2()
 	int i = 0;
 	for (int k = 0; k < Nzp; k++)
 	{
-		for (i = 1; z_coord[i] > Pu[k]; i++);
-		first_zp_elem_num[k] = (r_coord.size() - 1) * (i - 1) + 1;
+		for (i = 0; z_coord[i] < Pu[k]; i++);
+		first_zp_elem_num[k] = ((r_coord.size()) - 1) * (i + 1);
 		num_zp_elems[k]++;
-		for (; z_coord[i] > Pd[k]; i++) num_zp_elems[k]++;
+		for (; z_coord[i] < Pd[k]; i++) num_zp_elems[k]++;
 		Nbc2 += num_zp_elems[k];
 	}
 	ofstream out;
@@ -225,7 +228,7 @@ void Grid::gr_bc2()
 	out << Nbc2 << endl;
 	for (int k = 0; k < Nzp; k++)
 		for (int j = 0; j < num_zp_elems[k]; j++)
-			out << first_zp_elem_num[k] + r_coord.size() * j - 1 << " " << 0 << " " << 2 << " " << Tetta[k] << endl;
+			out << first_zp_elem_num[k] << " " << 0 << " " << 2 << " " << Tetta[k] << endl;
 	out.close();
 }
 
