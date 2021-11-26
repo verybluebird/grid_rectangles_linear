@@ -121,7 +121,7 @@ void Grid::nodes()
 		double delta = H[i] / nz[i];
 		for (int j = 0; j < nz[i]; j++) {
 			S += delta;
-			z_coord[c] = -S;
+			z_coord[c] = S;
 			c++;
 		}
 	}
