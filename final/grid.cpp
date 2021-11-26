@@ -79,30 +79,29 @@ void Grid::input()
 }
 
 void Grid::add_if_not_exist_and_sort(double L) {
-	if (find(z_coord.begin(), z_coord.end(), L) == z_coord.end()) {
-		/* узла нет */
+	if (find(z_coord.begin(), z_coord.end(), L) == z_coord.end())
+	{
+		// узла нет
 		z_coord.push_back(L);
 		sort(z_coord.begin(), z_coord.end(), greater<>());
 	}
-	else {
+	else
 		sort(z_coord.begin(), z_coord.end(), greater<>());
-	}
-
 }
 
 
 void Grid::nodes()
 {
 	double l = Rb - Rw;
-	double h = l * (1 - kr) / (1 - pow(kr, nr));//длина первого справа прямоугольника в сетке
-	int Nz_uz = 1; //колво узлов по z
+	double h = l * (1 - kr) / (1 - pow(kr, nr)); // длина первого справа прямоугольника в сетке
+	int Nz_uz = 1; // колво узлов по z
 	for (int i = 0; i < NL; i++)
 		Nz_uz += nz[i];
 
 
-	double S = z0;//начальная координата
+	double S = z0; // начальная координата
 
-	r_coord.resize(nr + 1);//координаты сетки по r
+	r_coord.resize(nr + 1); // координаты сетки по r
 	r_coord[0] = Rw;
 	S = r_coord[0];
 	int k = 1;
@@ -113,7 +112,7 @@ void Grid::nodes()
 		k++;
 	}
 
-	z_coord.resize(Nz_uz); //координаты сетки по z
+	z_coord.resize(Nz_uz); // координаты сетки по z
 	z_coord[0] = z0;
 	S = z0;
 	int c = 1;
@@ -126,47 +125,46 @@ void Grid::nodes()
 			c++;
 		}
 	}
-	//добавляем узлы для перфорации
+	// добавляем узлы для перфорации
 	for (int i = 0; i < Nzp; i++)
 	{
 		add_if_not_exist_and_sort(Pu[i]);
 		add_if_not_exist_and_sort(Pd[i]);
 	}
-	//удаляем повторы в r
+	// удаляем повторы в r
 	sort(r_coord.begin(), r_coord.end());
 	r_coord.erase(unique(r_coord.begin(), r_coord.end()), r_coord.end());
 
 	Nuz = z_coord.size() * r_coord.size();
-	//вывод в файл
+	// вывод в файл
 	ofstream file("node.txt");
-	if (file.is_open()) {
+	if (file.is_open())
+	{
 		file << Nuz << endl;
-		file.precision(17);
+		file.precision(16);
 		for (int i = 0; i < z_coord.size(); i++)
-		{
 			for (int j = 0; j < r_coord.size(); j++)
-				file << z_coord[i] << " " << r_coord[j] << endl;
-		}
+				file << r_coord[j] << " " << z_coord[i] << endl;
 		file.close();
 	}
 	else cout << "File node.txt is not opened!\n\n" << endl;
 }
 
-void Grid::elems() {
+void Grid::elems()
+{
 	Nel = (z_coord.size() - 1) * (r_coord.size() - 1);
 	global_numbers.resize(z_coord.size());
-	int c = 1;
+	int c = 0;
 	for (int i = 0; i < z_coord.size(); i++)
 	{
 		global_numbers[i].resize(r_coord.size());
-		for (int j = 0; j < r_coord.size(); j++) {
+		for (int j = 0; j < r_coord.size(); j++, c++)
 			global_numbers[i][j] = c;
-			c++;
-		}
 	}
-	//вывод номеров прямоугольников
+	// вывод номеров прямоугольников
 	ofstream file("elem.txt ");
-	if (file.is_open()) {
+	if (file.is_open())
+	{
 		file << Nel << endl;
 		for (int i = 0; i < z_coord.size() - 1; i++)
 		{
@@ -203,8 +201,8 @@ void Grid::gr_bc1()
 	ofstream out;
 	out.open("bc1.txt");
 	out << Nbc1 << endl;
-	for (int i = 0; i < z_coord.size(); i++)
-		out << i * z_coord.size() << ' ' << Plast << endl;
+	for (int i = 1; i <= z_coord.size(); i++)
+		out << i * r_coord.size() - 1 << ' ' << Plast << endl;
 	out.close();
 }
 
@@ -227,7 +225,7 @@ void Grid::gr_bc2()
 	out << Nbc2 << endl;
 	for (int k = 0; k < Nzp; k++)
 		for (int j = 0; j < num_zp_elems[k]; j++)
-			out << first_zp_elem_num[k] + r_coord.size() * j << " " << 2 << " " << 4 << " " << Tetta[k] << endl;
+			out << first_zp_elem_num[k] + r_coord.size() * j - 1 << " " << 0 << " " << 2 << " " << Tetta[k] << endl;
 	out.close();
 }
 
@@ -236,30 +234,30 @@ void Grid::print_profile()
 	vector<vector<int>> c_list; // connections list
 	c_list.resize(Nuz);
 	// формирование списка связности
-	for (int i = 1; i < r_coord.size(); i++)
-		c_list[i].push_back(i);
+	for (int i = 1; i <= r_coord.size(); i++)
+		c_list[i].push_back(i-1);
 	for (int j = 1; j < z_coord.size(); j++)
 	{
+		c_list[j * r_coord.size()].push_back((j - 1) * r_coord.size());
 		c_list[j * r_coord.size()].push_back((j - 1) * r_coord.size() + 1);
-		c_list[j * r_coord.size()].push_back((j - 1) * r_coord.size() + 2);
 
+		c_list[(j + 1) * r_coord.size() - 1].push_back(j * r_coord.size() - 2);
 		c_list[(j + 1) * r_coord.size() - 1].push_back(j * r_coord.size() - 1);
-		c_list[(j + 1) * r_coord.size() - 1].push_back(j * r_coord.size());
-		c_list[(j + 1) * r_coord.size() - 1].push_back((j + 1) * r_coord.size() - 1);
+		c_list[(j + 1) * r_coord.size() - 1].push_back((j + 1) * r_coord.size());
 
-		for (int i = j * r_coord.size()+1; i < (j+1) * r_coord.size()-1; i++)
+		for (int i = j * r_coord.size()+1; i < (j + 1) * r_coord.size() - 2; i++)
 		{
-			c_list[i - 1].push_back(i - 1 - r_coord.size());
+			c_list[i - 1].push_back(i - r_coord.size() - 1);
 			c_list[i - 1].push_back(i - r_coord.size());
-			c_list[i - 1].push_back(i + 1 - r_coord.size());
+			c_list[i - 1].push_back(i - r_coord.size()+1);
 			c_list[i - 1].push_back(i - 1);
 		}
 	}
 
 	ofstream out;
 	out.open("profile.txt"); // разреженный строчно-столбцовый формат (массивы ia, ja)
-	out << "1 ";
-	int counter = 1;
+	out << "0 ";
+	int counter = 0;
 	for (int i = 0; i < c_list.size(); i++)
 	{
 		counter += c_list[i].size();
