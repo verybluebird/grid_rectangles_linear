@@ -95,8 +95,13 @@ void Grid::add_if_not_exist_and_sort(double L)
 void Grid::nodes()
 {
 	double l = Rb - Rw;
-	double h = l * (1 - kr) / (1 - pow(kr, nr)); // длина первого справа прямоугольника в сетке
-	int Nz_uz = 1; // колво узлов по z
+	double h;
+	if (kr < 1)
+		h = l * (1 - kr) / (1 - pow(kr, nr)); // длина первого справа прямоугольника в сетке
+	else if (kr == 1)
+		h = l / nr;
+	else cout << "kr should be <=1\n";
+	int Nz_uz = 1; // кол-во узлов по z
 	for (int i = 0; i < NL; i++)
 		Nz_uz += nz[i];
 	
@@ -192,7 +197,7 @@ void Grid::material()
 			boarder += H[k];
 			k++;
 		}
-		for (int j = 0; j < r_coord.size() - 1; j++)
+		for (int j = 0; j < r_coord.size() - 1 && k<NL; j++)
 			out << K[k] << ' ' << Phi[k] << ' ' << S2[k] << endl;
 	}
 	out.close();
@@ -218,8 +223,10 @@ void Grid::gr_bc2()
 	for (int k = 0; k < Nzp; k++)
 	{
 		for (i = 0; z_coord[i] < Pu[k]; i++);
-		first_zp_elem_num[k] = ((r_coord.size()) - 1) * (i + 1);
+			
+				first_zp_elem_num[k] = ((r_coord.size()) - 1) * i;
 		num_zp_elems[k]++;
+		i++;
 		for (; z_coord[i] < Pd[k]; i++) num_zp_elems[k]++;
 		Nbc2 += num_zp_elems[k];
 	}
@@ -228,7 +235,7 @@ void Grid::gr_bc2()
 	out << Nbc2 << endl;
 	for (int k = 0; k < Nzp; k++)
 		for (int j = 0; j < num_zp_elems[k]; j++)
-			out << first_zp_elem_num[k] << " " << 0 << " " << 2 << " " << Tetta[k] << endl;
+			out << first_zp_elem_num[k] + ((r_coord.size()) - 1) * j << " " << 0 << " " << 2 << " " << Tetta[k] << endl;
 	out.close();
 }
 
