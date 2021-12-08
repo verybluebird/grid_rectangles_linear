@@ -117,7 +117,8 @@ void Grid::nodes()
 		r_coord[k] = S;
 		k++;
 	}
-
+	
+	
 	z_coord.resize(Nz_uz); // координаты сетки по z
 	S = z0;
 	z_coord[0] = z0;
@@ -142,6 +143,17 @@ void Grid::nodes()
 	// удаляем повторы в r
 	sort(r_coord.begin(), r_coord.end());
 	r_coord.erase(unique(r_coord.begin(), r_coord.end()), r_coord.end());
+	//делаем вложенную сетку, если надо 
+	if (M == 1) {
+		nested_grid(r_coord);
+		nested_grid(z_coord);
+	}
+	if (M == 2) {
+		nested_grid(r_coord);
+		nested_grid(z_coord);
+		nested_grid(r_coord);
+		nested_grid(z_coord);
+	}
 
 	Nuz = z_coord.size() * r_coord.size();
 	// вывод в файл
@@ -237,6 +249,22 @@ void Grid::gr_bc2()
 		for (int j = 0; j < num_zp_elems[k]; j++)
 			out << first_zp_elem_num[k] + ((r_coord.size()) - 1) * j << " " << 0 << " " << 2 << " " << Tetta[k] << endl;
 	out.close();
+}
+
+void Grid::nested_grid(vector<double>& coord)
+{
+	vector<double> coord2((coord.size() - 1) * 2 + 1);
+	coord2[0] = coord[0];
+	int k = 1;
+	for (int i = 1; i < coord.size(); i++)
+	{
+		coord2[k] = (coord[i-1] + coord[i]) / 2;
+		k++;
+		coord2[k] = coord[i];
+		k++;
+	}
+	coord = coord2;
+	coord2.clear();
 }
 
 void Grid::print_profile()

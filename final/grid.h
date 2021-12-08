@@ -26,7 +26,7 @@ private:
 	vector<vector<int>> global_numbers; //глобальные номера узлов
 	double z0 = 0; //откуда начинается первый сверху слой по z
 	vector<double> r_coord; // координаты по r
-	vector<double> z_coord; // координаты по r
+	vector<double> z_coord; // координаты по z
 
 public:
 	void input();// ввод  данных
@@ -44,6 +44,7 @@ public:
 	void material();
 	void gr_bc1();
 	void gr_bc2();
+	void nested_grid(vector<double>& coord); //увеличивает кол-во узлов вдвое
 	void add_if_not_exist_and_sort(double L); // добавить новый узел в сетку, если его не существует
 	void print_profile(); // распечатать профиль матрицы
 
